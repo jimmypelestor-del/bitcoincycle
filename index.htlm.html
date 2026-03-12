@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les marchés baissiers du Bitcoin deviennent-ils moins violents ?</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #0f0f18;
+    --surface: #13131f;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e6f0;
+    --muted: #7a7890;
+    --accent: #f7931a;
+    --accent2: #e85d5d;
+    --accent3: #4ade80;
+    --gold: #d4af37;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 5rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(247,147,26,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(232,93,93,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 80% at 50% 100%, rgba(10,10,15,0.9) 0%, transparent 70%);
+  }
+
+  /* Animated chart lines in hero */
+  .hero-chart {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    overflow: hidden;
+  }
+  .hero-chart svg {
+    width: 100%;
+    height: 100%;
+  }
+  .chart-line {
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 2000;
+    animation: drawLine 3s ease forwards;
+  }
+  .chart-line-2 { animation-delay: 0.5s; }
+  .chart-line-3 { animation-delay: 1s; }
+
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.3s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 8vw, 7rem);
+    font-weight: 900;
+    line-height: 1.0;
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.5s forwards;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-subtitle {
+    margin-top: 2rem;
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 520px;
+    position: relative;
+    z-index: 2;
+    font-weight: 400;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.8s forwards;
+  }
+
+  .hero-meta {
+    margin-top: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    animation: fadeUp 1s ease 1s forwards;
+  }
+
+  .hero-meta-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .hero-meta-item span {
+    display: block;
+    color: var(--text);
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    animation: fadeIn 1s ease 1.5s forwards;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.2); }
+  }
+
+  /* ARTICLE BODY */
+  .article {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 5rem 2rem 8rem;
+  }
+
+  /* LEAD */
+  .lead {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.65;
+    color: rgba(232, 230, 240, 0.9);
+    border-left: 3px solid var(--accent);
+    padding-left: 2rem;
+    margin-bottom: 4rem;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.2s forwards;
+  }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 4.5rem;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+
+  h2 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  p {
+    font-size: 1.05rem;
+    color: rgba(232, 230, 240, 0.8);
+    margin-bottom: 1.4rem;
+    font-weight: 300;
+  }
+
+  p strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* DRAWDOWN TABLE */
+  .drawdown-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 2.5rem;
+    margin: 3rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .drawdown-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+  }
+
+  .drawdown-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  .cycle-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cycle-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .cycle-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 70px;
+  }
+
+  .cycle-bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .cycle-bar {
+    height: 100%;
+    border-radius: 3px;
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: growBar 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .cycle-bar.c1 { background: linear-gradient(90deg, #e85d5d, #ff8c8c); width: 94%; animation-delay: 0.2s; }
+  .cycle-bar.c2 { background: linear-gradient(90deg, #e85d5d, #f4a261); width: 86%; animation-delay: 0.4s; }
+  .cycle-bar.c3 { background: linear-gradient(90deg, #f4a261, #f7c948); width: 84%; animation-delay: 0.6s; }
+  .cycle-bar.c4 { background: linear-gradient(90deg, #f7c948, #4ade80); width: 76%; animation-delay: 0.8s; }
+
+  @keyframes growBar {
+    to { transform: scaleX(1); }
+  }
+
+  .cycle-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .c1-text { color: #e85d5d; }
+  .c2-text { color: #f4a261; }
+  .c3-text { color: #f7c948; }
+  .c4-text { color: #4ade80; }
+
+  /* PULLQUOTE */
+  .pullquote {
+    margin: 3.5rem -1rem;
+    padding: 2.5rem 2rem;
+    position: relative;
+  }
+
+  .pullquote::before {
+    content: '"';
+    font-family: 'Playfair Display', serif;
+    font-size: 10rem;
+    line-height: 0.8;
+    color: var(--accent);
+    opacity: 0.12;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .pullquote p {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* FACTORS GRID */
+  .factors-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0 3rem;
+  }
+
+  @media (max-width: 600px) {
+    .factors-grid { grid-template-columns: 1fr; }
+  }
+
+  .factor-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.8rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+  }
+
+  .factor-card:hover {
+    border-color: rgba(247,147,26,0.3);
+  }
+
+  .factor-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .factor-card:hover::after {
+    transform: scaleX(1);
+  }
+
+  .factor-icon {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .factor-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+  }
+
+  .factor-desc {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* PROJECTION BOX */
+  .projection {
+    background: linear-gradient(135deg, rgba(247,147,26,0.06), rgba(247,147,26,0.02));
+    border: 1px solid rgba(247,147,26,0.2);
+    padding: 2.5rem;
+    margin: 3rem 0;
+    position: relative;
+  }
+
+  .projection-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+  }
+
+  .projection-scenarios {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .scenario {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .scenario-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--accent2);
+    display: block;
+    line-height: 1;
+  }
+
+  .scenario-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 0.5rem 0;
+    display: block;
+  }
+
+  .scenario-price {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* COMPRESSION DIAGRAM */
+  .compression-visual {
+    margin: 3rem 0;
+    padding: 2.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .compress-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  .compress-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    gap: 1rem;
+  }
+
+  .compress-cycle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 55px;
+  }
+
+  .compress-bars {
+    display: flex;
+    flex: 1;
+    height: 28px;
+    position: relative;
+    gap: 2px;
+  }
+
+  .compress-up {
+    border-radius: 2px 2px 0 0;
+    align-self: flex-end;
+    transition: width 1s ease;
+  }
+
+  .compress-down {
+    border-radius: 0 0 2px 2px;
+    align-self: flex-start;
+    transition: width 1s ease;
+  }
+
+  .compress-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Arrows/amplitude representation */
+  .amplitude-chart {
+    width: 100%;
+    height: 120px;
+    position: relative;
+    margin: 1.5rem 0;
+  }
+
+  /* FINAL THOUGHT */
+  .final-section {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .final-section h2 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+  }
+
+  /* FOOTNOTE */
+  .footnote {
+    margin-top: 5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Number highlight */
+  .num {
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    font-size: 0.95em;
+  }
+
+  /* Divider */
+  .divider {
+    width: 60px;
+    height: 2px;
+    background: var(--accent);
+    margin: 3rem 0;
+    opacity: 0.5;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    .hero { padding: 4rem 1.5rem 3rem; }
+    .article { padding: 3rem 1.5rem 6rem; }
+    .drawdown-section { padding: 1.5rem; }
+    .projection { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+
+  <!-- Animated background chart lines -->
+  <div class="hero-chart">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="none" fill="none">
+      <polyline class="chart-line" points="0,800 120,750 200,600 280,650 380,580 420,200 500,250 600,300 700,220 780,180 900,280 980,250 1100,180 1200,200 1320,150 1440,170"
+        stroke="#f7931a" stroke-width="2" fill="none"/>
+      <polyline class="chart-line chart-line-2" points="0,850 200,820 350,780 500,700 600,720 700,600 800,400 900,450 1000,380 1100,350 1200,300 1300,290 1440,260"
+        stroke="rgba(247,147,26,0.4)" stroke-width="1" fill="none"/>
+      <polyline class="chart-line chart-line-3" points="0,900 300,880 500,870 700,800 900,750 1100,650 1300,600 1440,580"
+        stroke="rgba(247,147,26,0.2)" stroke-width="1" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="hero-tag">Analyse on-chain · Bitcoin · Cycles de marché</div>
+
+  <h1 class="hero-title">
+    Les marchés baissiers<br>
+    du Bitcoin deviennent-ils<br>
+    <em>moins violents ?</em>
+  </h1>
+
+  <p class="hero-subtitle">
+    Chaque cycle apporte son euphorie, puis son moment de doute. Mais quelque chose change, discrètement, d'un cycle à l'autre.
+  </p>
+
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      Marché
+      <span>BTC/USD</span>
+    </div>
+    <div class="hero-meta-item">
+      Timeframe
+      <span>2M — Multi-cycles</span>
+    </div>
+    <div class="hero-meta-item">
+      Date
+      <span>Mars 2026</span>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ARTICLE -->
+<article class="article">
+
+  <p class="lead reveal">
+    Le Bitcoin est connu pour ses hausses spectaculaires… mais aussi pour ses chutes brutales. Pourtant, lorsqu'on prend du recul et qu'on regarde les cycles dans leur ensemble, une tendance discrète mais réelle commence à se dessiner.
+  </p>
+
+  <!-- SECTION 1 -->
+  <div class="section reveal">
+    <div class="section-label">Observation #01</div>
+    <h2>Les grandes <em>corrections</em> du Bitcoin</h2>
+
+    <p>
+      Si vous avez vécu l'un de ces marchés baissiers de l'intérieur, vous savez ce que ça fait. Le portefeuille qui fond. Les forums qui s'emballent. La tentation de tout vendre. Et pourtant, ceux qui ont traversé plusieurs cycles remarquent quelque chose d'intéressant en regardant les chiffres côte à côte.
+    </p>
+
+    <p>
+      <strong>Les drawdowns diminuent, cycle après cycle.</strong> Pas de façon dramatique — Bitcoin reste Bitcoin — mais la tendance est là, visible, mesurable.
+    </p>
+  </div>
+
+  <!-- DRAWDOWN CHART -->
+  <div class="drawdown-section reveal">
+    <div class="drawdown-title">Drawdowns maximum par cycle bear market</div>
+
+    <div class="cycle-row">
+      <div class="cycle-label">Cycle 1</div>
+      <div class="cycle-bar-track"><div class="cycle-bar c1"></div></div>
+      <div class="cycle-pct c1-text">−94 %</div>
+    </div>
+
+    <div class="cycle-row">
+      <div class="cycle-label">Cycle 2</div>
+      <div class="cycle-bar-track"><div class="cycle-bar c2"></div></div>
+      <div class="cycle-pct c2-text">−86 %</div>
+    </div>
+
+    <div class="cycle-row">
+      <div class="cycle-label">Cycle 3</div>
+      <div class="cycle-bar-track"><div class="cycle-bar c3"></div></div>
+      <div class="cycle-pct c3-text">−84 %</div>
+    </div>
+
+    <div class="cycle-row">
+      <div class="cycle-label">Cycle 4</div>
+      <div class="cycle-bar-track"><div class="cycle-bar c4"></div></div>
+      <div class="cycle-pct c4-text">−76 %</div>
+    </div>
+  </div>
+
+  <div class="section reveal">
+    <p>
+      À première vue, ces chiffres donnent encore le vertige. Mais regardez la direction : <span class="num">-94</span>, <span class="num">-86</span>, <span class="num">-84</span>, <span class="num">-76</span>. Ce n'est pas un hasard. Ce n'est pas du bruit. C'est un marché qui apprend, lentement, à mûrir.
+    </p>
+  </div>
+
+  <!-- PULLQUOTE -->
+  <div class="pullquote reveal">
+    <p>Le Bitcoin chute toujours fortement… mais un peu moins à chaque fois. Et c'est peut-être l'un des signaux les plus importants de cette décennie.</p>
+  </div>
+
+  <!-- SECTION 2 — POURQUOI -->
+  <div class="section reveal">
+    <div class="section-label">Analyse #02</div>
+    <h2>Pourquoi les chutes deviennent-elles <em>moins violentes</em> ?</h2>
+    <p>
+      Ce n'est pas une loi naturelle. C'est le résultat de plusieurs forces qui s'accumulent, cycle après cycle, et qui changent en profondeur la structure même du marché.
+    </p>
+  </div>
+
+  <div class="factors-grid reveal">
+    <div class="factor-card">
+      <span class="factor-icon">📈</span>
+      <div class="factor-title">Un marché qui mûrit</div>
+      <p class="factor-desc">Au début, Bitcoin était un marché minuscule. Quelques millions suffisaient à tout faire bouger. Aujourd'hui, les volumes et la profondeur de marché ont changé l'équation fondamentalement.</p>
+    </div>
+
+    <div class="factor-card">
+      <span class="factor-icon">🏦</span>
+      <div class="factor-title">L'institutionnalisation</div>
+      <p class="factor-desc">Des fonds, des entreprises cotées, des ETF spot. Ces acteurs n'ont pas le même comportement que les retail investors de 2013. Leur présence crée une base d'achat structurelle dans les creux.</p>
+    </div>
+
+    <div class="factor-card">
+      <span class="factor-icon">💰</span>
+      <div class="factor-title">Une capitalisation colossale</div>
+      <p class="factor-desc">Perdre 90% sur un actif à 100M$ de capitalisation, c'est facile. Sur un actif à plusieurs trillions, les forces nécessaires pour provoquer un tel effondrement sont autrement plus importantes.</p>
+    </div>
+
+    <div class="factor-card">
+      <span class="factor-icon">🧱</span>
+      <div class="factor-title">Les mains de diamant</div>
+      <p class="factor-desc">Une base croissante d'investisseurs long terme qui n'ont jamais vendu lors des bear markets précédents. Ils accumulent dans la peur et créent des zones d'absorption puissantes lors des chutes.</p>
+    </div>
+  </div>
+
+  <div class="divider reveal"></div>
+
+  <!-- SECTION 3 — PROJECTION -->
+  <div class="section reveal">
+    <div class="section-label">Prospective #03</div>
+    <h2>À quoi pourrait ressembler <em>le prochain</em> marché baissier ?</h2>
+
+    <p>
+      Si la tendance se maintient — et il n'y a aucune raison qu'elle s'inverse brusquement — le prochain cycle bear pourrait être le moins destructeur de l'histoire du Bitcoin. Ce qui ne veut pas dire indolore.
+    </p>
+
+    <p>
+      Une estimation raisonnable se situerait autour de <strong>−65% à −70%</strong>. En partant d'un sommet hypothétique proche de <span class="num">130 000 $</span>, on obtient des scénarios concrets.
+    </p>
+  </div>
+
+  <div class="projection reveal">
+    <div class="projection-header">Scénarios de bottom — sommet hypothétique 130 000 $</div>
+    <p style="font-size:0.95rem; color: var(--muted); margin-bottom: 0;">Ces projections ne constituent pas des conseils financiers. Elles s'appuient uniquement sur la tendance historique des cycles précédents.</p>
+
+    <div class="projection-scenarios">
+      <div class="scenario">
+        <span class="scenario-pct">−70 %</span>
+        <span class="scenario-label">Scénario conservateur</span>
+        <span class="scenario-price">≈ 39 000 $</span>
+      </div>
+      <div class="scenario">
+        <span class="scenario-pct" style="color: var(--accent);">−65 %</span>
+        <span class="scenario-label">Scénario optimiste</span>
+        <span class="scenario-price">≈ 45 500 $</span>
+      </div>
+      <div class="scenario">
+        <span class="scenario-pct" style="color: var(--accent3);">−60 %</span>
+        <span class="scenario-label">Scénario bull</span>
+        <span class="scenario-price">≈ 52 000 $</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 — COMPRESSION -->
+  <div class="section reveal">
+    <div class="section-label">Tendance de fond #04</div>
+    <h2>Le marché <em>se compresse</em></h2>
+
+    <p>
+      Il y a quelque chose d'encore plus intéressant que les baisses qui s'atténuent : les hausses aussi deviennent proportionnellement moins explosives. Premier cycle, <span class="num">+45 000%</span>. Dernier cycle, quelques centaines de pourcents.
+    </p>
+
+    <p>
+      Combinée à des corrections moins profondes, cette compression de l'amplitude des cycles raconte une histoire précise : <strong>le Bitcoin se comporte de plus en plus comme un actif institutionnel</strong>. Toujours cyclique, toujours volatil, mais avec des oscillations qui se rapprochent progressivement de celles des actifs traditionnels à haute croissance.
+    </p>
+
+    <p>
+      Ce n'est pas la fin des cycles. Ce n'est pas la fin de la volatilité. C'est simplement l'adolescence qui laisse place à quelque chose de plus adulte.
+    </p>
+  </div>
+
+  <!-- COMPRESSION VISUAL -->
+  <div class="compression-visual reveal">
+    <div class="compress-title">Amplitude des cycles — Hausse vs Baisse (représentation schématique)</div>
+    <svg width="100%" height="160" viewBox="0 0 700 160" preserveAspectRatio="xMidYMid meet" fill="none">
+      <!-- Cycle 1 -->
+      <rect x="30" y="10" width="100" height="80" rx="2" fill="rgba(74,222,128,0.15)" stroke="rgba(74,222,128,0.4)" stroke-width="1"/>
+      <rect x="30" y="95" width="100" height="55" rx="2" fill="rgba(232,93,93,0.15)" stroke="rgba(232,93,93,0.4)" stroke-width="1"/>
+      <text x="80" y="50" text-anchor="middle" fill="rgba(74,222,128,0.7)" font-family="DM Mono" font-size="10">+45000%</text>
+      <text x="80" y="128" text-anchor="middle" fill="rgba(232,93,93,0.7)" font-family="DM Mono" font-size="10">-94%</text>
+      <text x="80" y="155" text-anchor="middle" fill="#555" font-family="DM Mono" font-size="9">Cycle 1</text>
+
+      <!-- Cycle 2 -->
+      <rect x="200" y="25" width="100" height="65" rx="2" fill="rgba(74,222,128,0.12)" stroke="rgba(74,222,128,0.3)" stroke-width="1"/>
+      <rect x="200" y="95" width="100" height="45" rx="2" fill="rgba(232,93,93,0.12)" stroke="rgba(232,93,93,0.3)" stroke-width="1"/>
+      <text x="250" y="60" text-anchor="middle" fill="rgba(74,222,128,0.6)" font-family="DM Mono" font-size="10">+6888%</text>
+      <text x="250" y="123" text-anchor="middle" fill="rgba(232,93,93,0.6)" font-family="DM Mono" font-size="10">-86%</text>
+      <text x="250" y="155" text-anchor="middle" fill="#555" font-family="DM Mono" font-size="9">Cycle 2</text>
+
+      <!-- Cycle 3 -->
+      <rect x="370" y="35" width="100" height="50" rx="2" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.25)" stroke-width="1"/>
+      <rect x="370" y="95" width="100" height="36" rx="2" fill="rgba(232,93,93,0.1)" stroke="rgba(232,93,93,0.25)" stroke-width="1"/>
+      <text x="420" y="65" text-anchor="middle" fill="rgba(74,222,128,0.5)" font-family="DM Mono" font-size="10">+1256%</text>
+      <text x="420" y="118" text-anchor="middle" fill="rgba(232,93,93,0.5)" font-family="DM Mono" font-size="10">-84%</text>
+      <text x="420" y="155" text-anchor="middle" fill="#555" font-family="DM Mono" font-size="9">Cycle 3</text>
+
+      <!-- Cycle 4 -->
+      <rect x="540" y="45" width="100" height="38" rx="2" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.2)" stroke-width="1"/>
+      <rect x="540" y="95" width="100" height="28" rx="2" fill="rgba(232,93,93,0.08)" stroke="rgba(232,93,93,0.2)" stroke-width="1"/>
+      <text x="590" y="70" text-anchor="middle" fill="rgba(74,222,128,0.45)" font-family="DM Mono" font-size="10">+506%</text>
+      <text x="590" y="115" text-anchor="middle" fill="rgba(232,93,93,0.45)" font-family="DM Mono" font-size="10">-76%</text>
+      <text x="590" y="155" text-anchor="middle" fill="#555" font-family="DM Mono" font-size="9">Cycle 4</text>
+
+      <!-- Trend arrow -->
+      <line x1="80" y1="8" x2="590" y2="43" stroke="rgba(247,147,26,0.3)" stroke-width="1" stroke-dasharray="4,3"/>
+      <polygon points="590,38 600,43 590,48" fill="rgba(247,147,26,0.3)"/>
+    </svg>
+  </div>
+
+  <!-- FINAL THOUGHT -->
+  <div class="final-section reveal">
+    <div class="section-label">Réflexion finale</div>
+    <h2>Le Bitcoin est peut-être <em>en train de grandir</em></h2>
+
+    <p>
+      Il restera probablement volatile pendant encore longtemps. Aucun actif ne fait cette transition en quelques années. Mais les données des cycles passés suggèrent quelque chose d'important : le marché n'est plus le même qu'en 2013. Ni même qu'en 2018.
+    </p>
+
+    <p>
+      Les corrections continueront d'exister. Elles feront encore mal. Mais elles pourraient être, à chaque fois, un peu moins destructrices pour ceux qui restent.
+    </p>
+
+    <p>
+      Et c'est peut-être le signe que le Bitcoin franchit, lentement mais sûrement, une nouvelle étape dans son évolution — <strong>celle d'un actif qui commence à porter la permanence.</strong>
+    </p>
+  </div>
+
+  <div class="footnote">
+    Analyse basée sur données historiques BTCUSD Bitstamp · Timeframe 2M · Mars 2026<br>
+    Ceci ne constitue pas un conseil financier. DYOR.
+  </div>
+
+</article>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if (el.isIntersecting) {
+        el.target.classList.add('visible');
+        observer.unobserve(el.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
